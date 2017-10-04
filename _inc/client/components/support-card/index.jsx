@@ -17,16 +17,24 @@ import {
 } from 'lib/plans/constants';
 import {
 	getSiteRawUrl,
-	isAutomatedTransfer
+	isAtomicSite,
 } from 'state/initial-state';
 import {
 	getSitePlan,
 	isFetchingSiteData
 } from 'state/site';
+import { getSiteConnectionStatus } from 'state/connection';
 import JetpackBanner from 'components/jetpack-banner';
 
 const SupportCard = React.createClass( {
 	displayName: 'SupportCard',
+
+	getDefaultProps: function() {
+		return {
+			className: '',
+			siteConnectionStatus: false
+		};
+	},
 
 	trackBannerClick() {
 		analytics.tracks.recordJetpackClick( {
@@ -84,7 +92,7 @@ const SupportCard = React.createClass( {
 						<p className="jp-support-card__description">
 							<Button
 								onClick={ this.trackAskQuestionClick }
-								href={ this.props.isAutomatedTransfer
+								href={ this.props.isAtomicSite
 									? 'https://wordpress.com/help/contact/'
 									: 'https://jetpack.com/contact-support/'
 								}
@@ -93,7 +101,7 @@ const SupportCard = React.createClass( {
 							</Button>
 							<Button
 								onClick={ this.trackSearchClick }
-								href={ this.props.isAutomatedTransfer
+								href={ this.props.isAtomicSite
 									? 'https://wordpress.com/help/'
 									: 'https://jetpack.com/support/'
 								}
@@ -104,7 +112,7 @@ const SupportCard = React.createClass( {
 					</div>
 				</Card>
 				{
-					noPrioritySupport && (
+					( this.props.siteConnectionStatus && noPrioritySupport ) && (
 						<JetpackBanner
 							title={ __( 'Get a faster resolution to your support questions.' ) }
 							plan={ PLAN_JETPACK_PERSONAL }
@@ -120,6 +128,7 @@ const SupportCard = React.createClass( {
 } );
 
 SupportCard.propTypes = {
+	siteConnectionStatus: React.PropTypes.any.isRequired,
 	className: React.PropTypes.string
 };
 
@@ -128,8 +137,9 @@ export default connect(
 		return {
 			sitePlan: getSitePlan( state ),
 			siteRawUrl: getSiteRawUrl( state ),
+			siteConnectionStatus: getSiteConnectionStatus( state ),
 			isFetchingSiteData: isFetchingSiteData( state ),
-			isAutomatedTransfer: isAutomatedTransfer( state )
+			isAtomicSite: isAtomicSite( state )
 		};
 	}
 )( SupportCard );

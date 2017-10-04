@@ -16,11 +16,30 @@ import {
 import { ModuleSettingsForm as moduleSettingsForm } from 'components/module-settings/module-settings-form';
 import SettingsCard from 'components/settings-card';
 import SettingsGroup from 'components/settings-group';
+import JetpackBanner from 'components/jetpack-banner';
 
 export const VerificationServices = moduleSettingsForm(
 	React.createClass( {
+		activateVerificationTools: function() {
+			return this.props.updateOptions( { 'verification-tools': true } );
+		},
+
 		render() {
 			const verification = this.props.getModule( 'verification-tools' );
+
+			// Show one-way activation banner if not active
+			if ( ! this.props.getOptionValue( 'verification-tools' ) ) {
+				return (
+					<JetpackBanner
+						callToAction={ __( 'Activate' ) }
+						title={ verification.name }
+						icon="cog"
+						description={ verification.long_description }
+						onClick={ this.activateVerificationTools }
+					/>
+				);
+			}
+
 			return (
 				<SettingsCard
 					{ ...this.props }
@@ -38,28 +57,28 @@ export const VerificationServices = moduleSettingsForm(
 										google: (
 											<ExternalLink
 												icon={ true }
-												target="_blank"
+												target="_blank" rel="noopener noreferrer"
 												href="https://www.google.com/webmasters/tools/"
 											/>
 										),
 										bing: (
 											<ExternalLink
 												icon={ true }
-												target="_blank"
+												target="_blank" rel="noopener noreferrer"
 												href="https://www.bing.com/webmaster/"
 											/>
 										),
 										pinterest: (
 											<ExternalLink
 												icon={ true }
-												target="_blank"
+												target="_blank" rel="noopener noreferrer"
 												href="https://pinterest.com/website/verify/"
 											/>
 										),
 										yandex: (
 											<ExternalLink
 												icon={ true }
-												target="_blank"
+												target="_blank" rel="noopener noreferrer"
 												href="https://webmaster.yandex.com/sites/"
 											/>
 										)

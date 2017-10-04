@@ -35,7 +35,7 @@ const PlanHeader = React.createClass( {
 							{ __( 'Introducing our most affordable backups and security plan yet' ) }
 						</h2>
 						<p className="jp-landing-plans__header-description">
-							{ __( 'The Personal Plan keeps your data, site, and hard work safe.' ) }
+							{ __( 'Jetpack Personal keeps your data, site, and hard work safe.' ) }
 						</p>
 						<div className="jp-landing-plans__header-img-container">
 							<div className="jp-landing-plans__header-col-left">
@@ -63,7 +63,7 @@ const PlanHeader = React.createClass( {
 				planCard = (
 					<div className="jp-landing__plan-card">
 						<div className="jp-landing__plan-card-img">
-							<img src={ imagePath + '/plans/plan-jetpack-free.svg' } className="jp-landing__plan-icon" alt="" />
+							<img src={ imagePath + '/plans/plan-free.svg' } className="jp-landing__plan-icon" alt="" />
 						</div>
 						<div className="jp-landing__plan-card-current">
 							<h3 className="jp-landing__plan-features-title">{ __( 'Your site is on the Free Jetpack Plan' ) }</h3>
@@ -77,11 +77,11 @@ const PlanHeader = React.createClass( {
 				planCard = (
 					<div className="jp-landing__plan-card">
 						<div className="jp-landing__plan-card-img">
-							<img src={ imagePath + '/plans/plan-jetpack-premium.svg' } className="jp-landing__plan-icon" alt="" />
+							<img src={ imagePath + '/plans/plan-personal.svg' } className="jp-landing__plan-icon" alt="" />
 						</div>
 						<div className="jp-landing__plan-card-current">
-							<h3 className="jp-landing__plan-features-title">{ __( 'Your site is on the Jetpack Personal plan' ) }</h3>
-							<p className="jp-landing__plan-features-text">{ __( 'With this plan you are provided with spam-protection, daily backups (up to 30 days), and unlimited storage.' ) }</p>
+							<h3 className="jp-landing__plan-features-title">{ __( 'Welcome to Jetpack Personal' ) }</h3>
+							<p className="jp-landing__plan-features-text">{ __( 'Security essentials (daily backups, spam filtering), and priority support.' ) }</p>
 						</div>
 					</div>
 				);
@@ -91,11 +91,11 @@ const PlanHeader = React.createClass( {
 				planCard = (
 					<div className="jp-landing__plan-card">
 						<div className="jp-landing__plan-card-img">
-							<img src={ imagePath + '/plans/plan-jetpack-premium.svg' } className="jp-landing__plan-icon" alt="" />
+							<img src={ imagePath + '/plans/plan-premium.svg' } className="jp-landing__plan-icon" alt="" />
 						</div>
 						<div className="jp-landing__plan-card-current">
-							<h3 className="jp-landing__plan-features-title">{ __( 'Your site is on the Jetpack Premium plan' ) }</h3>
-							<p className="jp-landing__plan-features-text">{ __( 'With this plan you are provided with spam-protection, daily backups (up to 30 days), unlimited backup storage, security scanning, 13Gb of ad-free video hosting, income generation from ads, and priority support.' ) }</p>
+							<h3 className="jp-landing__plan-features-title">{ __( 'Welcome to Jetpack Premium' ) }</h3>
+							<p className="jp-landing__plan-features-text">{ __( 'Enhanced security (backups, scanning, spam filtering), marketing automation (social scheduling, ad program), 13Gb video hosting, and priority support.' ) }</p>
 						</div>
 					</div>
 				);
@@ -105,11 +105,11 @@ const PlanHeader = React.createClass( {
 				planCard = (
 					<div className="jp-landing__plan-card">
 						<div className="jp-landing__plan-card-img">
-							<img src={ imagePath + '/plans/plan-jetpack-pro.svg' } className="jp-landing__plan-icon" alt="" />
+							<img src={ imagePath + '/plans/plan-business.svg' } className="jp-landing__plan-icon" alt="" />
 						</div>
 						<div className="jp-landing__plan-card-current">
-							<h3 className="jp-landing__plan-features-title">{ __( 'Your site is on the Jetpack Professional plan' ) }</h3>
-							<p className="jp-landing__plan-features-text">{ __( 'You get spam-protection, real-time backups (unlimited archive), unlimited backup storage, security scanning, unlimited ad-free video hosting, income generation from ads, SEO tools, and priority support.' ) }</p>
+							<h3 className="jp-landing__plan-features-title">{ __( 'Welcome to Jetpack Professional' ) }</h3>
+							<p className="jp-landing__plan-features-text">{ __( 'Unlimited Premium themes, business class security (backups, scanning, spam filtering), marketing automation (social scheduling, SEO tools, ad program), video hosting, and priority support.' ) }</p>
 						</div>
 					</div>
 				);
@@ -119,7 +119,7 @@ const PlanHeader = React.createClass( {
 				planCard = (
 					<div className="jp-landing__plan-card">
 						<div className="jp-landing__plan-card-img">
-							<img src={ imagePath + '/plans/plan-jetpack-free.svg' } className="jp-landing__plan-icon" alt="" />
+							<img src={ imagePath + '/plans/plan-free.svg' } className="jp-landing__plan-icon" alt="" />
 						</div>
 						<div className="jp-landing__plan-card-current">
 							<h3 className="jp-landing__plan-features-title">{ __( 'Your site is on Development Mode' ) }</h3>

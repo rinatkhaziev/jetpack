@@ -92,6 +92,48 @@ class Jetpack_CLI extends WP_CLI_Command {
 	}
 
 	/**
+	 * Tests the active connection
+	 *
+	 * Does a two-way test to verify that the local site can communicate with remote Jetpack/WP.com servers and that Jetpack/WP.com servers can talk to the local site.
+	 *
+	 * ## EXAMPLES
+	 *
+	 * wp jetpack test-connection
+	 *
+	 * @subcommand test-connection
+	 */
+	public function test_connection( $args, $assoc_args ) {
+		if ( ! Jetpack::is_active() ) {
+			WP_CLI::error( __( 'Jetpack is not currently connected to WordPress.com', 'jetpack' ) );
+		}
+
+		$response = Jetpack_Client::wpcom_json_api_request_as_blog(
+			sprintf( '/jetpack-blogs/%d/test-connection', Jetpack_Options::get_option( 'id' ) ),
+			Jetpack_Client::WPCOM_JSON_API_VERSION
+		);
+
+		if ( is_wp_error( $response ) ) {
+			/* translators: %1$s is the error code, %2$s is the error message */
+			WP_CLI::error( sprintf( __( 'Failed to test connection (#%1$s: %2$s)', 'jetpack' ), $response->get_error_code(), $response->get_error_message() ) );
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( ! $body ) {
+			WP_CLI::error( __( 'Failed to test connection (empty response body)', 'jetpack' ) );
+		}
+
+		$result = json_decode( $body );
+		$is_connected = (bool) $result->connected;
+		$message = $result->message;
+
+		if ( $is_connected ) {
+			WP_CLI::success( $message );
+		} else {
+			WP_CLI::error( $message );
+		}
+	}
+
+	/**
 	 * Disconnect Jetpack Blogs or Users
 	 *
 	 * ## OPTIONS
@@ -373,7 +415,7 @@ class Jetpack_CLI extends WP_CLI_Command {
 			case 'whitelist':
 				$whitelist         = array();
 				$new_ip            = $args[1];
-				$current_whitelist = get_site_option( 'jetpack_protect_whitelist' );
+				$current_whitelist = get_site_option( 'jetpack_protect_whitelist', array() );
 
 				// Build array of IPs that are already whitelisted.
 				// Re-build manually instead of using jetpack_protect_format_whitelist() so we can easily get
@@ -678,14 +720,20 @@ class Jetpack_CLI extends WP_CLI_Command {
 				$i = 1;
 				do {
 					$result = Jetpack_Sync_Actions::$sender->do_full_sync();
-					if ( $result ) {
-						if ( 1 == $i++ ) {
+					if ( is_wp_error( $result ) ) {
+						$queue_empty_error = ( 'empty_queue_full_sync' == $result->get_error_code() );
+						if ( ! $queue_empty_error || ( $queue_empty_error && ( 1 == $i ) ) ) {
+							WP_CLI::error( sprintf( __( 'Sync errored with code: %s', 'jetpack' ), $result->get_error_code() ) );
+						}
+					} else {
+						if ( 1 == $i ) {
 							WP_CLI::log( __( 'Sent data to WordPress.com', 'jetpack' ) );
 						} else {
 							WP_CLI::log( __( 'Sent more data to WordPress.com', 'jetpack' ) );
 						}
 					}
-				} while ( $result );
+					$i++;
+				} while ( $result && ! is_wp_error( $result ) );
 
 				// Reset sync settings to original.
 				Jetpack_Sync_Settings::update_settings( $original_settings );
@@ -803,6 +851,8 @@ class Jetpack_CLI extends WP_CLI_Command {
 
 		$result = Jetpack_Client::_wp_remote_request( $url, $request );
 
+		Jetpack_Options::delete_option( 'onboarding' );
+
 		if ( is_wp_error( $result ) ) {
 			$this->partner_provision_error( $result );
 		}
@@ -825,15 +875,19 @@ class Jetpack_CLI extends WP_CLI_Command {
 	 * : Slug of the requested plan, e.g. premium
 	 * [--wpcom_user_id=<user_id>]
 	 * : WordPress.com ID of user to connect as (must be whitelisted against partner key)
+	 * [--onboarding=<onboarding>]
+	 * : Guide the user through an onboarding wizard
 	 * [--force_register=<register>]
 	 * : Whether to force a site to register
+	 * [--force_connect=<force_connect>]
+	 * : Force JPS to not reuse existing credentials
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp jetpack partner_provision '{ some: "json" }' premium 1
 	 *     { success: true }
 	 *
-	 * @synopsis <token_json> [--wpcom_user_id=<user_id>] [--plan=<plan_name>] [--force_register=<register>]
+	 * @synopsis <token_json> [--wpcom_user_id=<user_id>] [--plan=<plan_name>] [--onboarding=<onboarding>] [--force_register=<register>] [--force_connect=<force_connect>]
 	 */
 	public function partner_provision( $args, $named_args ) {
 		list( $token_json ) = $args;
@@ -924,6 +978,18 @@ class Jetpack_CLI extends WP_CLI_Command {
 
 		if ( isset( $named_args['plan'] ) && ! empty( $named_args['plan'] ) ) {
 			$request_body['plan'] = $named_args['plan'];
+		}
+
+		if ( isset( $named_args['onboarding'] ) && ! empty( $named_args['onboarding'] ) ) {
+			$request_body['onboarding'] = intval( $named_args['onboarding'] );
+		}
+
+		if ( isset( $named_args['force_connect'] ) && ! empty( $named_args['force_connect'] ) ) {
+			$request_body['force_connect'] = intval( $named_args['force_connect'] );
+		}
+
+		if ( isset( $request_body['onboarding'] ) && (bool) $request_body['onboarding'] ) {
+			Jetpack::create_onboarding_token();
 		}
 
 		$request = array(

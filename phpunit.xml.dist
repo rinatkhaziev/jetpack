@@ -56,6 +56,9 @@
 		<testsuite name="widgets">
 			<directory prefix="test_" suffix=".php">tests/php/modules/widgets</directory>
 		</testsuite>
+		<testsuite name="sitemaps">
+			<directory prefix="test_" suffix=".php">tests/php/modules/sitemaps</directory>
+		</testsuite>
 		<testsuite name="sso">
 			<directory prefix="test_" suffix=".php">tests/php/modules/sso</directory>
 		</testsuite>
@@ -79,6 +82,9 @@
 		</testsuite>
 		<testsuite name="jitm">
 			<file>tests/php/test_class.jetpack-jitm.php</file>
+		</testsuite>
+		<testsuite name="3rd-party">
+			<directory prefix="test_" suffix=".php">tests/php/3rd-party</directory>
 		</testsuite>
 	</testsuites>
 	<groups>

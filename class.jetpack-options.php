@@ -27,6 +27,7 @@ class Jetpack_Options {
 				'active_modules',
 				'available_modules',
 				'do_activate',
+				'edit_links_calypso_redirect', // (bool) Whether post/page edit links on front end should point to Calypso.
 				'log',
 				'slideshow_background_color',
 				'widget_twitter',
@@ -50,6 +51,8 @@ class Jetpack_Options {
 				'sync_error_idc',              // (bool|array) false or array containing the site's home and siteurl at time of IDC error
 				'safe_mode_confirmed',         // (bool) True if someone confirms that this site was correctly put into safe mode automatically after an identity crisis is discovered.
 				'migrate_for_idc',             // (bool) True if someone confirms that this site should migrate stats and subscribers from its previous URL
+				'dismissed_connection_banner', // (bool) True if the connection banner has been dismissed
+				'onboarding',                  // (string) Auth token to be used in the onboarding connection flow
 			);
 
 		case 'private' :
@@ -61,6 +64,7 @@ class Jetpack_Options {
 
 		case 'network' :
 			return array(
+				'onboarding',                   // (string) Auth token to be used in the onboarding connection flow
 				'file_data'                     // (array) List of absolute paths to all Jetpack modules
 			);
 		}
@@ -183,7 +187,7 @@ class Jetpack_Options {
 		$is_network_option = self::is_network_option( $jetpack_name );
 		$value = $is_network_option ? get_site_option( $name ) : get_option( $name );
 
-		if ( $value === false && $default !== false ) {
+		if ( false === $value && false !== $default ) {
 			if ( $is_network_option ) {
 				update_site_option( $name, $default );
 			} else {
@@ -329,10 +333,13 @@ class Jetpack_Options {
 	 * Deletes an option via $wpdb query.
 	 *
 	 * @param string $name Option name.
-	 * 
+	 *
 	 * @return bool Is the option deleted?
 	 */
 	static function delete_raw_option( $name ) {
+		if ( self::bypass_raw_option( $name ) ) {
+			return delete_option( $name );
+		}
 		global $wpdb;
 		$result = $wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->options WHERE option_name = %s", $name ) );
 		return $result;
@@ -348,6 +355,9 @@ class Jetpack_Options {
 	 * @return bool Is the option updated?
 	 */
 	static function update_raw_option( $name, $value, $autoload = false ) {
+		if ( self::bypass_raw_option( $name ) ) {
+			return update_option( $name, $value, $autoload );
+		}
 		global $wpdb;
 		$autoload_value = $autoload ? 'yes' : 'no';
 
@@ -384,6 +394,10 @@ class Jetpack_Options {
 	 * @return mixed Option value, or null if option is not found and default is not specified.
 	 */
 	static function get_raw_option( $name, $default = null ) {
+		if ( self::bypass_raw_option( $name ) ) {
+			return get_option( $name, $default );
+		}
+
 		global $wpdb;
 		$value = $wpdb->get_var(
 			$wpdb->prepare(
@@ -400,4 +414,26 @@ class Jetpack_Options {
 		return $value;
 	}
 
+	/**
+	 * This function checks for a constant that, if present, will disable direct DB queries Jetpack uses to manage certain options and force Jetpack to always use Options API instead.
+	 * Options can be selectively managed via a blacklist by filtering option names via the jetpack_disabled_raw_option filter.
+	 *
+	 * @param $name Option name
+	 *
+	 * @return bool
+	 */
+	static function bypass_raw_option( $name ) {
+
+		if ( Jetpack_Constants::get_constant( 'JETPACK_DISABLE_RAW_OPTIONS' ) ) {
+			return true;
+		}
+		/**
+		 * Allows to disable particular raw options.
+		 * @since 5.5.0
+		 *
+		 * @param array $disabled_raw_options An array of option names that you can selectively blacklist from being managed via direct database queries.
+		 */
+		$disabled_raw_options = apply_filters( 'jetpack_disabled_raw_options', array() );
+		return isset( $disabled_raw_options[ $name ] );
+	}
 }

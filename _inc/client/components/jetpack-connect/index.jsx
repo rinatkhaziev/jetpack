@@ -18,7 +18,7 @@ const JetpackConnect = React.createClass( {
 
 	render: function() {
 		const newAccountUrl = this.props.connectUrl + '&from=new-account-button';
-		
+
 		return (
 			<div className="jp-jetpack-connect__container">
 				<h1 className="jp-jetpack-connect__container-title" title="Welcome to Jetpack">
@@ -29,12 +29,13 @@ const JetpackConnect = React.createClass( {
 					<p className="jp-jetpack-connect__description">
 						{ __( 'Please connect to or create a WordPress.com account to start using Jetpack. This will enable powerful security, traffic, and customization services.' ) }
 					</p>
-					<ConnectButton from="landing-page-top" />
-					<p>
-						<a href={ newAccountUrl } className="jp-jetpack-connect__link">
-							{ __( 'No account? Create one for free…' ) }
-						</a>
-					</p>
+					<ConnectButton from="landing-page-top">
+						<p>
+							<a href={ newAccountUrl } className="jp-jetpack-connect__link">
+								{ __( 'No account? Create one for free' ) }
+							</a>
+						</p>
+					</ConnectButton>
 				</Card>
 
 				<Card className="jp-jetpack-connect__feature jp-jetpack-connect__traffic">
@@ -190,25 +191,6 @@ const JetpackConnect = React.createClass( {
 							className="jp-jetpack-connect__feature-image" alt="Jetpacks photon serves up lightning fast, optimized images" />
 					</div>
 				</Card>
-				<Card className="jp-jetpack-connect__feature">
-					<header className="jp-jetpack-connect__header">
-						<h2 className="jp-jetpack-connect__container-subtitle" title="Jetpack offers free, professional support">
-							{ __( 'Did we mention free, professional support?' ) }
-						</h2>
-						<p className="jp-jetpack-connect__description">
-							{ __(
-								'Jetpack is supported by some of the most technical and passionate people in the community. ' +
-								"They're located around the globe and ready to help you."
-							) }
-						</p>
-					</header>
-
-					<div className="jp-jetpack-connect__interior-container">
-						<img src={ imagePath + 'aurora-med.jpg' }
-							srcSet={ `${imagePath}aurora-sm.jpg 600w, ${imagePath}aurora-med.jpg 770w, ${imagePath}aurora-lrg.jpg 1200w` }
-							className="jp-jetpack-connect__feature-image" alt="Jetpack's free support team" />
-					</div>
-				</Card>
 				<Card className="jp-jetpack-connect__cta">
 					<p className="jp-jetpack-connect__description">
 						{ __(
@@ -216,12 +198,13 @@ const JetpackConnect = React.createClass( {
 							'We\'re passionate about WordPress and here to make your life easier.'
 						) }
 					</p>
-					<ConnectButton from="landing-page-bottom" />
-					<p>
-						<a href={ newAccountUrl } className="jp-jetpack-connect__link">
-							{ __( 'No account? Create one for free…' ) }
-						</a>
-					</p>
+					<ConnectButton from="landing-page-bottom">
+						<p>
+							<a href={ newAccountUrl } className="jp-jetpack-connect__link">
+								{ __( 'No account? Create one for free' ) }
+							</a>
+						</p>
+					</ConnectButton>
 				</Card>
 			</div>
 		);

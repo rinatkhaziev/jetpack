@@ -47,6 +47,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 
 		// Load API endpoints
 		require_once JETPACK__PLUGIN_DIR . '_inc/lib/core-api/class.jetpack-core-api-module-endpoints.php';
+		require_once JETPACK__PLUGIN_DIR . '_inc/lib/core-api/class.jetpack-core-api-site-endpoints.php';
 
 		self::$user_permissions_error_msg = esc_html__(
 			'You do not have the correct user permissions to perform this action.
@@ -62,6 +63,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 		$module_list_endpoint = new Jetpack_Core_API_Module_List_Endpoint();
 		$module_data_endpoint = new Jetpack_Core_API_Module_Data_Endpoint();
 		$module_toggle_endpoint = new Jetpack_Core_API_Module_Toggle_Endpoint( new Jetpack_IXR_Client() );
+		$site_endpoint = new Jetpack_Core_API_Site_Endpoint();
 
 		register_rest_route( 'jetpack/v4', '/jitm', array(
 			'methods'  => WP_REST_Server::READABLE,
@@ -71,6 +73,18 @@ class Jetpack_Core_Json_Api_Endpoints {
 		register_rest_route( 'jetpack/v4', '/jitm', array(
 			'methods'  => WP_REST_Server::CREATABLE,
 			'callback' => __CLASS__ . '::delete_jitm_message'
+		) );
+
+		// Register a site
+		register_rest_route( 'jetpack/v4', '/verify_registration', array(
+			'methods' => WP_REST_Server::EDITABLE,
+			'callback' => __CLASS__ . '::verify_registration',
+		) );
+
+		// Authorize a remote user
+		register_rest_route( 'jetpack/v4', '/remote_authorize', array(
+			'methods' => WP_REST_Server::EDITABLE,
+			'callback' => __CLASS__ . '::remote_authorize',
 		) );
 
 		// Get current connection status of Jetpack
@@ -112,6 +126,13 @@ class Jetpack_Core_Json_Api_Endpoints {
 			'methods' => WP_REST_Server::READABLE,
 			'callback' => __CLASS__ . '::get_site_data',
 			'permission_callback' => __CLASS__ . '::view_admin_page_permission_check',
+		) );
+
+		// Get current site data
+		register_rest_route( 'jetpack/v4', '/site/features', array(
+			'methods' => WP_REST_Server::READABLE,
+			'callback' => array( $site_endpoint, 'get_features' ),
+			'permission_callback' => array( $site_endpoint , 'can_request' ),
 		) );
 
 		// Confirm that a site in identity crisis should be in staging mode
@@ -314,25 +335,83 @@ class Jetpack_Core_Json_Api_Endpoints {
 	}
 
 	/**
+	 * Asks for a jitm, unless they've been disabled, in which case it returns an empty array
+	 *
 	 * @param $request WP_REST_Request
 	 *
-	 * @return array
+	 * @return array An array of jitms
 	 */
 	public static function get_jitm_message( $request ) {
 		require_once( JETPACK__PLUGIN_DIR . 'class.jetpack-jitm.php' );
 
 		$jitm = Jetpack_JITM::init();
 
+		if ( ! $jitm ) {
+			return array();
+		}
+
 		return $jitm->get_messages( $request['message_path'], urldecode_deep( $request['query'] ) );
 	}
 
+	/**
+	 * Dismisses a jitm
+	 * @param $request WP_REST_Request The request
+	 *
+	 * @return bool Always True
+	 */
 	public static function delete_jitm_message( $request ) {
 		require_once( JETPACK__PLUGIN_DIR . 'class.jetpack-jitm.php' );
 
 		$jitm = Jetpack_JITM::init();
 
+		if ( ! $jitm ) {
+			return true;
+		}
+
 		return $jitm->dismiss( $request['id'], $request['feature_class'] );
 	}
+
+	/**
+	 * Handles verification that a site is registered
+	 *
+	 * @since 5.4.0
+	 *
+	 * @param WP_REST_Request $request The request sent to the WP REST API.
+	 *
+	 * @return array|wp-error
+	 */
+	public static function verify_registration( $request ) {
+		require_once JETPACK__PLUGIN_DIR . 'class.jetpack-xmlrpc-server.php';
+		$xmlrpc_server = new Jetpack_XMLRPC_Server();
+		$result = $xmlrpc_server->verify_registration( array( $request['secret_1'], $request['state'] ) );
+
+		if ( is_a( $result, 'IXR_Error' ) ) {
+			$result = new WP_Error( $result->code, $result->message );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Handles verification that a site is registered
+	 *
+	 * @since 5.4.0
+	 *
+	 * @param WP_REST_Request $request The request sent to the WP REST API.
+	 *
+	 * @return array|wp-error
+	 */
+	 public static function remote_authorize( $request ) {
+		require_once JETPACK__PLUGIN_DIR . 'class.jetpack-xmlrpc-server.php';
+		$xmlrpc_server = new Jetpack_XMLRPC_Server();
+		$result = $xmlrpc_server->remote_authorize( $request );
+
+		if ( is_a( $result, 'IXR_Error' ) ) {
+			$result = new WP_Error( $result->code, $result->message );
+		}
+
+		return $result;
+	 }
 
 	/**
 	 * Handles dismissing of Jetpack Notices
@@ -727,6 +806,13 @@ class Jetpack_Core_Json_Api_Endpoints {
 			$results = json_decode( $response['body'], true );
 
 			if ( is_array( $results ) && isset( $results['plan'] ) ) {
+
+				// Set flag for newly purchased plan
+				$current_plan = Jetpack::get_active_plan();
+				if ( $current_plan['product_slug'] !== $results['plan']['product_slug'] && 'jetpack_free' !== $results['plan']['product_slug'] ) {
+					update_option( 'show_welcome_for_new_plan', true ) ;
+				}
+
 				update_option( 'jetpack_active_plan', $results['plan'] );
 			}
 
@@ -1567,6 +1653,41 @@ class Jetpack_Core_Json_Api_Endpoints {
 				'validate_callback'  => __CLASS__ . '::validate_boolean',
 				'jp_group'           => 'wordads',
 			),
+			'wordads_second_belowpost' => array(
+				'description'        => esc_html__( 'Display second ad below post?', 'jetpack' ),
+				'type'               => 'boolean',
+				'default'            => 1,
+				'validate_callback'  => __CLASS__ . '::validate_boolean',
+				'jp_group'           => 'wordads',
+			),
+			'wordads_display_front_page' => array(
+				'description'        => esc_html__( 'Display ads on the front page?', 'jetpack' ),
+				'type'               => 'boolean',
+				'default'            => 1,
+				'validate_callback'  => __CLASS__ . '::validate_boolean',
+				'jp_group'           => 'wordads',
+			),
+			'wordads_display_post' => array(
+				'description'        => esc_html__( 'Display ads on posts?', 'jetpack' ),
+				'type'               => 'boolean',
+				'default'            => 1,
+				'validate_callback'  => __CLASS__ . '::validate_boolean',
+				'jp_group'           => 'wordads',
+			),
+			'wordads_display_page' => array(
+				'description'        => esc_html__( 'Display ads on pages?', 'jetpack' ),
+				'type'               => 'boolean',
+				'default'            => 1,
+				'validate_callback'  => __CLASS__ . '::validate_boolean',
+				'jp_group'           => 'wordads',
+			),
+			'wordads_display_archive' => array(
+				'description'        => esc_html__( 'Display ads on archive pages?', 'jetpack' ),
+				'type'               => 'boolean',
+				'default'            => 1,
+				'validate_callback'  => __CLASS__ . '::validate_boolean',
+				'jp_group'           => 'wordads',
+			),
 
 			// Google Analytics
 			'google_analytics_tracking_id' => array(
@@ -1670,6 +1791,48 @@ class Jetpack_Core_Json_Api_Endpoints {
 				'jp_group'          => 'settings',
 			),
 
+			// Empty stats card dismiss
+			'dismiss_empty_stats_card' => array(
+				'description'       => '',
+				'type'              => 'boolean',
+				'default'           => 0,
+				'validate_callback' => __CLASS__ . '::validate_boolean',
+				'jp_group'          => 'settings',
+			),
+
+			'onboarding' => array(
+				'description'       => '',
+				'type'              => 'object',
+				'default'           => array(
+					'token'            => '',
+					'siteTitle'        => '',
+					'siteDescription'  => '',
+					'genre'            => 'blog',
+					'businessPersonal' => 'personal',
+					'businessInfo'     => array(
+						'businessName'     => '',
+						'businessAddress'  => '',
+						'businessCity'     => '',
+						'businessState'    => '',
+						'businessZipCode'  => '',
+					),
+					'homepageFormat'   => 'news',
+					'addContactForm'   => false,
+					'end'              => false,
+				),
+				'validate_callback' => __CLASS__ . '::validate_onboarding',
+				'jp_group'          => 'settings',
+			),
+
+			// Show welcome for newly purchased plan
+			'show_welcome_for_new_plan' => array(
+				'description'       => '',
+				'type'              => 'boolean',
+				'default'           => 0,
+				'validate_callback' => __CLASS__ . '::validate_boolean',
+				'jp_group'          => 'settings',
+			),
+
 		);
 
 		// Add modules to list so they can be toggled
@@ -1715,6 +1878,36 @@ class Jetpack_Core_Json_Api_Endpoints {
 	}
 
 	/**
+	 * Validates that the parameters are proper values that can be set during Jetpack onboarding.
+	 *
+	 * @since 5.4.0
+	 *
+	 * @param array           $onboarding_data Values to check.
+	 * @param WP_REST_Request $request         The request sent to the WP REST API.
+	 * @param string          $param           Name of the parameter passed to endpoint holding $value.
+	 *
+	 * @return bool|WP_Error
+	 */
+	public static function validate_onboarding( $onboarding_data, $request, $param ) {
+		if ( ! is_array( $onboarding_data ) ) {
+			return new WP_Error( 'invalid_param', esc_html__( 'Not valid onboarding data.', 'jetpack' ) );
+		}
+		foreach ( $onboarding_data as $value ) {
+			if ( is_string( $value ) ) {
+				$onboarding_choice = self::validate_string( $value, $request, $param );
+			} elseif ( is_array( $value ) ) {
+				$onboarding_choice = self::validate_onboarding( $value, $request, $param );
+			} else {
+				$onboarding_choice = self::validate_boolean( $value, $request, $param );
+			}
+			if ( is_wp_error( $onboarding_choice ) ) {
+				return $onboarding_choice;
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * Validates that the parameter is either a pure boolean or a numeric string that can be mapped to a boolean.
 	 *
 	 * @since 4.3.0
@@ -1723,7 +1916,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_boolean( $value, $request, $param ) {
 		if ( ! is_bool( $value ) && ! ( ( ctype_digit( $value ) || is_numeric( $value ) ) && in_array( $value, array( 0, 1 ) ) ) ) {
@@ -1741,7 +1934,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_posint( $value = 0, $request, $param ) {
 		if ( ! is_numeric( $value ) || $value <= 0 ) {
@@ -1759,7 +1952,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_list_item( $value = '', $request, $param ) {
 		$attributes = $request->get_attributes();
@@ -1790,7 +1983,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_module_list( $value = '', $request, $param ) {
 		if ( ! is_array( $value ) ) {
@@ -1815,7 +2008,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_alphanum( $value = '', $request, $param ) {
 		if ( ! empty( $value ) && ( ! is_string( $value ) || ! preg_match( '/^[a-z0-9]+$/i', $value ) ) ) {
@@ -1833,7 +2026,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_verification_service( $value = '', $request, $param ) {
 		if ( ! empty( $value ) && ! ( is_string( $value ) && ( preg_match( '/^[a-z0-9_-]+$/i', $value ) || preg_match( '#^<meta name="([a-z0-9_\-.:]+)?" content="([a-z0-9_-]+)?" />$#i', $value ) ) ) ) {
@@ -1851,7 +2044,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_stats_roles( $value, $request, $param ) {
 		if ( ! empty( $value ) && ! array_intersect( self::$stats_roles, $value ) ) {
@@ -1872,7 +2065,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_sharing_show( $value, $request, $param ) {
 		$views = array( 'index', 'post', 'page', 'attachment', 'jetpack-portfolio' );
@@ -1902,7 +2095,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_services( $value, $request, $param ) {
 		if ( ! is_array( $value ) || ! isset( $value['visible'] ) || ! isset( $value['hidden'] ) ) {
@@ -1942,7 +2135,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_custom_service( $value, $request, $param ) {
 		if ( ! is_array( $value ) || ! isset( $value['sharing_name'] ) || ! isset( $value['sharing_url'] ) || ! isset( $value['sharing_icon'] ) ) {
@@ -1975,7 +2168,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_custom_service_id( $value = '', $request, $param ) {
 		if ( ! empty( $value ) && ( ! is_string( $value ) || ! preg_match( '/custom\-[0-1]+/i', $value ) ) ) {
@@ -2004,7 +2197,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_twitter_username( $value = '', $request, $param ) {
 		if ( ! empty( $value ) && ( ! is_string( $value ) || ! preg_match( '/^@?\w{1,15}$/i', $value ) ) ) {
@@ -2022,7 +2215,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 * @param string $param Name of the parameter passed to endpoint holding $value.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function validate_string( $value = '', $request, $param ) {
 		if ( ! is_string( $value ) ) {
@@ -2039,7 +2232,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 *
 	 * @param string|bool $value Value to check.
 	 *
-	 * @return bool
+	 * @return bool|array
 	 */
 	public static function sanitize_stats_allowed_roles( $value ) {
 		if ( empty( $value ) ) {
@@ -2055,7 +2248,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 *
 	 * @param string $route Regular expression for the endpoint with the module slug to return.
 	 *
-	 * @return array
+	 * @return array|string
 	 */
 	public static function get_module_requested( $route = '/module/(?P<slug>[a-z\-]+)' ) {
 
@@ -2077,10 +2270,10 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 *
 	 * @since 4.3.0
 	 *
-	 * @param string      $modules Can be a single module or a list of modules.
-	 * @param null|string $slug    Slug of the module in the first parameter.
+	 * @param string|array $modules Can be a single module or a list of modules.
+	 * @param null|string  $slug    Slug of the module in the first parameter.
 	 *
-	 * @return array
+	 * @return array|string
 	 */
 	public static function prepare_modules_for_response( $modules = '', $slug = null ) {
 		global $wp_rewrite;

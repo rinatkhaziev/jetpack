@@ -6,7 +6,11 @@ import { connect } from 'react-redux';
 import Button from 'components/button';
 import { translate as __ } from 'i18n-calypso';
 import analytics from 'lib/analytics';
-import { getPlanClass } from 'lib/plans/constants';
+import {
+	getPlanClass,
+	FEATURE_UNLIMITED_PREMIUM_THEMES
+} from 'lib/plans/constants';
+import includes from 'lodash/includes';
 
 /**
  * Internal dependencies
@@ -48,6 +52,11 @@ const PlanBody = React.createClass( {
 		this.trackPlansClick( 'activate_wordads' );
 	},
 
+	activatePublicize() {
+		this.props.activateModule( 'publicize' );
+		this.trackPlansClick( 'activate_publicize' );
+	},
+
 	activateVideoPress() {
 		this.props.activateModule( 'videopress' );
 		this.trackPlansClick( 'activate_videopress' );
@@ -68,21 +77,37 @@ const PlanBody = React.createClass( {
 		const planClass = 'dev' !== this.props.plan
 			? getPlanClass( this.props.plan )
 			: 'dev';
+		const premiumThemesActive = includes( this.props.activeFeatures, FEATURE_UNLIMITED_PREMIUM_THEMES );
+
 		switch ( planClass ) {
 			case 'is-personal-plan':
 			case 'is-premium-plan':
 			case 'is-business-plan':
 				planCard = (
 					<div className="jp-landing__plan-features">
+						{
+							premiumThemesActive && (
+								<div className="jp-landing__plan-features-card">
+									<h3 className="jp-landing__plan-features-title">{ __( 'Unlimited Premium Themes' ) }</h3>
+									<p>{ __( "Exclusive hand-crafted designs you will love with dedicated support directly from the themes' authors." ) }</p>
+									<Button
+										onClick={ () => this.trackPlansClick( 'premium_themes' ) }
+										href={ 'https://wordpress.com/themes/premium/' + this.props.siteRawUrl }
+										className="is-primary">
+										{ __( 'Explore' ) }
+									</Button>
+								</div>
+							)
+						}
 						<div className="jp-landing__plan-features-card">
 							<h3 className="jp-landing__plan-features-title">{ __( 'Spam Protection' ) }</h3>
 							<p>{ __( 'State-of-the-art spam defense powered by Akismet.' ) }</p>
 							{
-								this.props.isPluginInstalled( 'akismet/akismet.php' ) && this.props.isPluginActive( 'akismet/akismet.php' ) ? (
-									<Button onClick={ () => this.trackPlansClick( 'view_spam_stats' ) } href={ this.props.siteAdminUrl + 'admin.php?page=akismet-key-config' } className="is-primary">
-										{ __( 'View your spam stats' ) }
-									</Button>
-								)
+							this.props.isPluginInstalled( 'akismet/akismet.php' ) && this.props.isPluginActive( 'akismet/akismet.php' ) ? (
+							<Button onClick={ () => this.trackPlansClick( 'view_spam_stats' ) } href={ this.props.siteAdminUrl + 'admin.php?page=akismet-key-config' } className="is-primary">
+								{ __( 'View your spam stats' ) }
+							</Button>
+							)
 								: (
 									<Button onClick={ () => this.trackPlansClick( 'configure_akismet' ) } href={ 'https://wordpress.com/plugins/setup/' + this.props.siteRawUrl + '?only=akismet' } className="is-primary">
 										{ __( 'Configure Akismet' ) }
@@ -174,6 +199,32 @@ const PlanBody = React.createClass( {
 											{ __( 'Activate Ads' ) }
 										</Button>
 									)
+								}
+							</div>
+						)
+					}
+
+					{
+						( 'is-business-plan' === planClass || 'is-premium-plan' === planClass ) && (
+							<div className="jp-landing__plan-features-card">
+								<h3 className="jp-landing__plan-features-title">{ __( 'Social Media Scheduling' ) }</h3>
+								<p>{ __( 'Schedule multiple Facebook, Twitter, and other social media postings in advance and view share history stats.' ) }</p>
+								{
+									this.props.isModuleActivated( 'publicize' )
+										? (
+											<Button onClick={ () => this.trackPlansClick( 'schedule_posts' ) } href={ 'https://wordpress.com/posts/' + this.props.siteRawUrl } className="is-primary">
+												{ __( 'Schedule Posts' ) }
+											</Button>
+										)
+										: (
+											<Button
+												onClick={ this.activatePublicize }
+												className="is-primary"
+												disabled={ this.props.isActivatingModule( 'publicize' ) }
+											>
+												{ __( 'Activate Publicize' ) }
+											</Button>
+										)
 								}
 							</div>
 						)
@@ -282,13 +333,15 @@ const PlanBody = React.createClass( {
 					{
 						'is-personal-plan' === planClass && (
 							<div className="jp-landing__plan-features-card">
-								<h3 className="jp-landing__plan-features-title">{ __( 'Need more? Running a business site?' ) }</h3>
-								<p>{ __( 'If your site is important to you, consider protecting and improving it with some of our advanced features: ' ) }</p>
-								<p> &mdash; { __( 'Daily and on-demand security scanning' ) }</p>
-								<p> &mdash; { __( 'Real-time backups and one-click threat resolution' ) }</p>
-								<p> &mdash; { __( 'Unlimited and ad-free video hosting' ) }</p>
-								<p> &mdash; { __( 'Advanced SEO tools' ) }</p>
-								<p> &mdash; { __( 'Income generation from ads' ) }</p>
+								<h3 className="jp-landing__plan-features-title">{ __( 'Explore Premium and Professional Options' ) }</h3>
+								<p>{ __( 'Learn about Jetpack services used by WordPress professionals. On top of the security essentials you currently enjoy, Jetpack offers you:' ) }</p>
+								<p> &bull; { __( 'Over 200 Premium themes to explore' ) }</p>
+								<p> &bull; { __( 'Business class security: malware scanning, real-time backups, and threat resolution' ) }</p>
+								<p> &bull; { __( 'Social media automation and scheduling' ) }</p>
+								<p> &bull; { __( 'Unlimited and ad-free video hosting' ) }</p>
+								<p> &bull; { __( 'SEO and social media previewing tools' ) }</p>
+								<p> &bull; { __( 'Income generation from a WordPress ad program' ) }</p>
+								<p> &bull; { __( 'Google Analytics integration' ) }</p>
 								<p>
 									<Button onClick={ () => this.trackPlansClick( 'compare_plans' ) } href={ 'https://jetpack.com/redirect/?source=plans-compare-personal&site=' + this.props.siteRawUrl } className="is-primary">
 										{ __( 'Compare Plans' ) }
@@ -301,16 +354,16 @@ const PlanBody = React.createClass( {
 					{
 						'is-premium-plan' === planClass && (
 							<div className="jp-landing__plan-features-card">
-								<h3 className="jp-landing__plan-features-title">{ __( 'Need more? Running a business site?' ) }</h3>
-								<p>{ __( 'If your site is important to you, consider protecting and improving it with some of our advanced features: ' ) }</p>
-								<p> &mdash; { __( 'On-demand security scanning' ) }</p>
-								<p> &mdash; { __( 'Real-time backups' ) }</p>
-								<p> &mdash; { __( 'One-click threat resolution' ) }</p>
-								<p> &mdash; { __( 'Advanced SEO tools' ) }</p>
-								<p> &mdash; { __( 'Income generation from ads' ) }</p>
+								<h3 className="jp-landing__plan-features-title">{ __( 'Explore Jetpack Professional' ) }</h3>
+								<p>{ __( 'Jetpack Professional is the tool used by WordPress professionals. On top of the services you already enjoy, you also benefit from:' ) }</p>
+								<p> &bull; { __( 'Over 200 Premium themes to explore' ) }</p>
+								<p> &bull; { __( 'Business class security: real-time backups and threat resolution' ) }</p>
+								<p> &bull; { __( 'SEO and social media previewing tools' ) }</p>
+								<p> &bull; { __( 'Unlimited ad-free video hosting' ) }</p>
+								<p> &bull; { __( 'Google Analytics integration' ) }</p>
 								<p>
 									<Button onClick={ () => this.trackPlansClick( 'compare_plans' ) } href={ 'https://jetpack.com/redirect/?source=plans-compare-premium&site=' + this.props.siteRawUrl } className="is-primary">
-										{ __( 'Compare Plans' ) }
+										{ __( 'Explore Jetpack Professional' ) }
 									</Button>
 								</p>
 							</div>
@@ -372,8 +425,10 @@ const PlanBody = React.createClass( {
 		}
 		return (
 			<div>
-				<QuerySitePlugins />
-				{ planCard	}
+				<div>
+					<QuerySitePlugins />
+					{ planCard }
+				</div>
 			</div>
 		);
 	}
