@@ -3,8 +3,8 @@
  */
 import React from 'react';
 
-const AdminNotices = React.createClass( {
-	componentDidMount() {
+class AdminNotices extends React.Component {
+    componentDidMount() {
 		const $adminNotices = jQuery( this.refs.adminNotices );
 
 		const $vpNotice = jQuery( '.vp-notice' );
@@ -44,11 +44,11 @@ const AdminNotices = React.createClass( {
 				$notice.find( '.dops-notice__action:first' ).detach().appendTo( $notice );
 			} );
 		}
-	},
+	}
 
 	render() {
 		return ( <div ref="adminNotices" aria-live="polite"></div> );
 	}
-} );
+}
 
 export default AdminNotices;

@@ -29,49 +29,47 @@ import {
 } from 'state/modules';
 import QuerySitePlugins from 'components/data/query-site-plugins';
 
-const PlanBody = React.createClass( {
-	propTypes: {
+class PlanBody extends React.Component {
+	static propTypes = {
 		plan: PropTypes.string
-	},
+	};
 
-	getDefaultProps: function() {
-		return {
-			plan: ''
-		};
-	},
+	static defaultProps = {
+		plan: ''
+	};
 
-	trackPlansClick( target ) {
+	trackPlansClick = target => {
 		analytics.tracks.recordJetpackClick( {
 			page: 'plans',
 			target: target,
 			plan: this.props.plan
 		} );
-	},
+	};
 
-	activateAds() {
+	activateAds = () => {
 		this.props.activateModule( 'wordads' );
 		this.trackPlansClick( 'activate_wordads' );
-	},
+	};
 
-	activatePublicize() {
+	activatePublicize = () => {
 		this.props.activateModule( 'publicize' );
 		this.trackPlansClick( 'activate_publicize' );
-	},
+	};
 
-	activateVideoPress() {
+	activateVideoPress = () => {
 		this.props.activateModule( 'videopress' );
 		this.trackPlansClick( 'activate_videopress' );
-	},
+	};
 
-	activateSeo() {
+	activateSeo = () => {
 		this.props.activateModule( 'seo-tools' );
 		this.trackPlansClick( 'activate_seo' );
-	},
+	};
 
-	activateGoogleAnalytics() {
+	activateGoogleAnalytics = () => {
 		this.props.activateModule( 'google-analytics' );
 		this.trackPlansClick( 'activate_ga' );
-	},
+	};
 
 	render() {
 		let planCard = '';
@@ -433,7 +431,7 @@ const PlanBody = React.createClass( {
 			</div>
 		);
 	}
-} );
+}
 
 export default connect(
 	( state ) => {

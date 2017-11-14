@@ -14,8 +14,8 @@ import Writing from 'writing/index.jsx';
 import Sharing from 'sharing/index.jsx';
 import SearchableModules from 'searchable-modules/index.jsx';
 
-export default React.createClass( {
-	displayName: 'SearchableSettings',
+export default class extends React.Component {
+    static displayName = 'SearchableSettings';
 
 	render() {
 		const commonProps = {
@@ -71,4 +71,4 @@ export default React.createClass( {
 			</div>
 		);
 	}
-} );
+}

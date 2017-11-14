@@ -29,22 +29,22 @@ import { getVaultPressScanThreatCount } from 'state/at-a-glance';
 import Card from 'components/card';
 import onKeyDownCallback from 'utils/onkeydown-callback';
 
-export const DevCard = React.createClass( {
-	displayName: 'DevCard',
+export class DevCard extends React.Component {
+    static displayName = 'DevCard';
 
-	onPlanChange( event ) {
+	onPlanChange = event => {
 		this.props.switchPlanPreview( event.target.value );
-	},
+	};
 
-	onPermissionsChange( event ) {
+	onPermissionsChange = event => {
 		this.props.switchUserPermissions( event.target.value );
-	},
+	};
 
-	onThreatsChange( event ) {
+	onThreatsChange = event => {
 		this.props.switchThreats( event.target.value );
-	},
+	};
 
-	maybeShowStatsToggle() {
+	maybeShowStatsToggle = () => {
 		if ( ! this.props.isAdmin ) {
 			return (
 				<div>
@@ -80,9 +80,9 @@ export const DevCard = React.createClass( {
 				</div>
 			);
 		}
-	},
+	};
 
-	maybeShowIsLinkedToggle() {
+	maybeShowIsLinkedToggle = () => {
 		if ( ! this.props.isMaster ) {
 			return (
 				<div>
@@ -118,7 +118,7 @@ export const DevCard = React.createClass( {
 				</div>
 			);
 		}
-	},
+	};
 
 	render() {
 		if ( ! this.props.canDisplayDevCard ) {
@@ -284,7 +284,7 @@ export const DevCard = React.createClass( {
 			</Card>
 		);
 	}
-} );
+}
 
 export default connect(
 	state => {
