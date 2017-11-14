@@ -18,7 +18,7 @@ import { getSitePlan } from 'state/site';
 import { isFetchingSiteData } from 'state/site';
 
 class Search extends React.Component {
-    render() {
+	render() {
 		const search = this.props.getModule( 'search' );
 		let planClass = null;
 

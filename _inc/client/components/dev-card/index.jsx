@@ -30,7 +30,7 @@ import Card from 'components/card';
 import onKeyDownCallback from 'utils/onkeydown-callback';
 
 export class DevCard extends React.Component {
-    static displayName = 'DevCard';
+	static displayName = 'DevCard';
 
 	onPlanChange = event => {
 		this.props.switchPlanPreview( event.target.value );

@@ -26,7 +26,7 @@ import PostByEmail from './post-by-email';
 import { Masterbar } from './masterbar';
 
 export class Writing extends React.Component {
-    static displayName = 'WritingSettings';
+	static displayName = 'WritingSettings';
 
 	render() {
 		const commonProps = {

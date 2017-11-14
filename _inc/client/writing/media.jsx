@@ -52,7 +52,7 @@ class Media extends React.Component {
 		);
 	};
 
-	toggleModule = (name, value) => {
+	toggleModule = ( name, value ) => {
 		if ( 'photon' === name ) {
 			// Carousel depends on Photon. Deactivate it if Photon is deactivated.
 			if ( false === ! value ) {

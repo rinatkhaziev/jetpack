@@ -26,7 +26,7 @@ import onKeyDownCallback from 'utils/onkeydown-callback';
 import JetpackDisconnectDialog from 'components/jetpack-disconnect-dialog';
 
 export class ConnectButton extends React.Component {
-    static displayName = 'ConnectButton';
+	static displayName = 'ConnectButton';
 
 	static propTypes = {
 		connectUser: PropTypes.bool,
@@ -140,8 +140,8 @@ export class ConnectButton extends React.Component {
 						'By connecting your site you agree to our fascinating {{tosLink}}Terms of Service{{/tosLink}} and to {{shareDetailsLink}}share details{{/shareDetailsLink}} with WordPress.com',
 						{
 							components: {
-								tosLink: <a href="https://wordpress.com/tos" rel="noopener noreferrer" target="_blank"/>,
-								shareDetailsLink: <a href="https://jetpack.com/support/what-data-does-jetpack-sync" rel="noopener noreferrer" target="_blank"/>
+								tosLink: <a href="https://wordpress.com/tos" rel="noopener noreferrer" target="_blank" />,
+								shareDetailsLink: <a href="https://jetpack.com/support/what-data-does-jetpack-sync" rel="noopener noreferrer" target="_blank" />
 							}
 						}
 					) }

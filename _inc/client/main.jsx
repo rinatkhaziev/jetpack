@@ -44,7 +44,7 @@ import { getTracksUserData } from 'state/initial-state';
 import WelcomeNewPlan from 'components/welcome-new-plan';
 
 class Main extends React.Component {
-    componentWillMount() {
+	componentWillMount() {
 		this.props.setInitialState();
 		restApi.setApiRoot( this.props.apiRoot );
 		restApi.setApiNonce( this.props.apiNonce );
@@ -120,7 +120,7 @@ class Main extends React.Component {
 		}
 	}
 
-	componentWillReceiveProps(nextProps) {
+	componentWillReceiveProps( nextProps ) {
 		if ( nextProps.jumpStartStatus !== this.props.jumpStartStatus ||
 			nextProps.isJumpstarting !== this.props.isJumpstarting ) {
 			this.handleJumpstart( nextProps );
@@ -187,7 +187,7 @@ class Main extends React.Component {
 		}
 
 		let pageComponent,
-			navComponent = <Navigation route={ this.props.route }/>,
+			navComponent = <Navigation route={ this.props.route } />,
 			settingsNav = <NavigationSettings route={ this.props.route } siteRawUrl={ this.props.siteRawUrl } siteAdminUrl={ this.props.siteAdminUrl } />;
 
 		switch ( route ) {
@@ -288,36 +288,36 @@ export default connect(
 window.wpNavMenuClassChange = function() {
 	let hash = window.location.hash;
 	const settingRoutes = [
-		'#/settings',
-		'#/general',
-		'#/discussion',
-		'#/security',
-		'#/traffic',
-		'#/writing',
-		'#/sharing'
-	],
-	dashboardRoutes = [
-		'#/',
-		'#/dashboard',
-		'#/plans'
-	];
+			'#/settings',
+			'#/general',
+			'#/discussion',
+			'#/security',
+			'#/traffic',
+			'#/writing',
+			'#/sharing'
+		],
+		dashboardRoutes = [
+			'#/',
+			'#/dashboard',
+			'#/plans'
+		];
 
 	// Clear currents
 	jQuery( '.current' ).each( function( i, obj ) {
 		jQuery( obj ).removeClass( 'current' );
 	} );
 
-	hash = hash.split( '?' )[0];
+	hash = hash.split( '?' )[ 0 ];
 	if ( includes( dashboardRoutes, hash ) ) {
-		let subNavItem = jQuery( '#toplevel_page_jetpack' ).find( 'li' ).filter( function( index ) {
+		const subNavItem = jQuery( '#toplevel_page_jetpack' ).find( 'li' ).filter( function( index ) {
 			return index === 1;
 		} );
-		subNavItem[0].classList.add( 'current' );
+		subNavItem[ 0 ].classList.add( 'current' );
 	} else if ( includes( settingRoutes, hash ) ) {
-		let subNavItem = jQuery( '#toplevel_page_jetpack' ).find( 'li' ).filter( function( index ) {
+		const subNavItem = jQuery( '#toplevel_page_jetpack' ).find( 'li' ).filter( function( index ) {
 			return index === 2;
 		} );
-		subNavItem[0].classList.add( 'current' );
+		subNavItem[ 0 ].classList.add( 'current' );
 	}
 
 	const $body = jQuery( 'body' );

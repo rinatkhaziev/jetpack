@@ -14,7 +14,7 @@ import { getConnectUrl as getConnectUrl } from 'state/connection';
 import { imagePath } from 'constants/urls';
 
 class JetpackConnect extends React.Component {
-    static displayName = 'JetpackConnect';
+	static displayName = 'JetpackConnect';
 
 	render() {
 		const newAccountUrl = this.props.connectUrl + '&from=new-account-button';
@@ -107,7 +107,7 @@ class JetpackConnect extends React.Component {
 						</p>
 
 						<img src={ imagePath + 'stats-example-med.png' }
-							srcSet={ `${imagePath}stats-example-sm.png 445w, ${imagePath}stats-example-med.png 770w, ${imagePath}stats-example-lrg.png 1200w` }
+							srcSet={ `${ imagePath }stats-example-sm.png 445w, ${ imagePath }stats-example-med.png 770w, ${ imagePath }stats-example-lrg.png 1200w` }
 							className="jp-jetpack-connect__feature-image" alt="Jetpack statistics and traffic insights graph" />
 					</div>
 				</Card>
@@ -187,7 +187,7 @@ class JetpackConnect extends React.Component {
 
 					<div className="jp-jetpack-connect__interior-container">
 						<img src={ imagePath + 'feature-photon-med.jpg' }
-							srcSet={ `${imagePath}feature-photon-sm.jpg 600w, ${imagePath}feature-photon-med.jpg 770w, ${imagePath}feature-photon-lrg.jpg 1200w` }
+							srcSet={ `${ imagePath }feature-photon-sm.jpg 600w, ${ imagePath }feature-photon-med.jpg 770w, ${ imagePath }feature-photon-lrg.jpg 1200w` }
 							className="jp-jetpack-connect__feature-image" alt="Jetpacks photon serves up lightning fast, optimized images" />
 					</div>
 				</Card>
@@ -215,6 +215,6 @@ export default connect(
 	state => {
 		return {
 			connectUrl: getConnectUrl( state )
-		}
+		};
 	}
 )( JetpackConnect );
