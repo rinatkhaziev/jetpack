@@ -41,6 +41,7 @@ export const SearchableModules = moduleSettingsForm(
 				'enhanced-distribution',
 				'json-api',
 				'latex',
+				'lazy-images',
 				'monitor',
 				'notes',
 				'shortcodes',
